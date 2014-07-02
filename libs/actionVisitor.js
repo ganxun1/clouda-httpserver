@@ -282,6 +282,11 @@ ActionVisitor.prototype = {
 	 * 发送一个http状态,并结束响应.
 	 */
 	sendStatus:function(code,msg,body){
+	
+		if(this.destroyd){
+			return;
+		}
+		
 		this.response.writeHeader(code , msg);
 		this.response.end(body || msg || "");
 	},
@@ -409,7 +414,6 @@ ActionVisitor.prototype = {
         opts.isChunk = !!opts.isChunk || false;
         
         opts.headers = opts.headers || {
-        	"Content-Type" : "text/html"
         };
         
         opts.onerror = opts.onerror || function(err){
@@ -428,14 +432,14 @@ ActionVisitor.prototype = {
         	// 按一个已打开的文件流处理
         	rstream = fs.createReadStream(fpath);
         	
+        	// 文件名时才能猜的到mime类型
+        	opts.headers["Content-Type"] = opts.headers["Content-Type"] || mime.lookup(fpath);
+        	
         }else if(fpath instanceof stream.Readable){
         	
         	// 按路径处理
         	rstream = fpath;
-        	
-        	// 文件名时才能猜的到mime类型
-        	opts.headers["Content-Type"] = opts.headers["Content-Type"] || mime.lookup(fpath);
-        	
+        	opts.headers["Content-Type"] = opts.headers["Content-Type"] || "text/html";
         }else{
         	log.warn("type of fpath is,", typeof(fpath));
         	opts.onerror(new Error("fname mast be string or reableStream"));
@@ -490,7 +494,20 @@ ActionVisitor.prototype = {
 		}else{
 			//无content-length时,node将自动使用 Transfer-Encoding : chunked
 			if(!opts.isChunk){
-				res.setHeader("Content-Length",status.size);
+				
+				fs.stat(fpath,function(err,status){
+					
+					if(err){
+						me.sendError(err,"404");
+						return;
+					}
+					
+					res.setHeader("Content-Length",status.size);
+					
+					res.statusCode = statusCode || 200;
+					rstream.pipe(targetWStream);
+				});
+				return;
 			}
 		}
 		res.statusCode = statusCode || 200;

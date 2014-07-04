@@ -1,9 +1,3 @@
-/**
- * New node file
- */
-/**
- * New node file
- */
 module.exports = {
     handle:function(){
         var req = this.request, res = this.response;

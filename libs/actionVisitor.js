@@ -9,10 +9,10 @@ var urlParse = require('url').parse;
 var querystring = require('querystring');
 var depcle = require("./lib.js").depcle;
 var mime = require("./mime");
-//var gzip = require('./gzip');
 var zlib = require('zlib');
 var EventEmitter = require("events").EventEmitter;
 var stream = require("stream");
+var uri = require("./uri"); 
 /**
  * action的访问对像, 将做为在action中访问到的this对像出现.
  * 
@@ -323,8 +323,9 @@ ActionVisitor.prototype = {
 		contentType = typeof(contentType) == "string" ? contentType : "text/html";
 		opts = typeof(opts) == "object" ? opts : {};
 		
+		//disable gzip，open chunk，for better user experience
 		opts.gzip = opts.gzip || false;
-	    opts.isChunk = !!opts.isChunk || false;
+	    opts.isChunk = !!opts.isChunk || true;
 	    
 	    opts.headers = opts.headers || {
 	    	"Content-Type" : contentType
@@ -411,7 +412,7 @@ ActionVisitor.prototype = {
         
         opts.gzip = opts.gzip || false;
         
-        opts.isChunk = !!opts.isChunk || false;
+        opts.isChunk = !!opts.isChunk || true;
         
         opts.headers = opts.headers || {
         };
@@ -455,6 +456,7 @@ ActionVisitor.prototype = {
 		
 		//debugger;
 		// 如果启用压缩,并且客户端支持压缩
+
 		if(opts.gzip == true && (comprcessType = me.getComprcessType()) != ""){
 			
 			log.dev("send.gzip , file: %s", fpath);
@@ -557,6 +559,9 @@ ActionVisitor.prototype = {
 
     lookup: function(url){
         return mime.lookup(url);
+    },
+    url : function(args, url){
+    	return uri.apply(this, arguments);
     }
 }
 

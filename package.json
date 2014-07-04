@@ -1,6 +1,6 @@
 {
   "name": "clouda-httpserver",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "clouda+ framework http server plugin",
   "main": "httpd.js",
   "scripts": {
